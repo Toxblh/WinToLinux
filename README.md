@@ -1,4 +1,4 @@
-# WinToLinux [![GitHub release](https://img.shields.io/github/release/toxblh/WinToLinux.svg)](https://github.com/Toxblh/WinToLinux/releases) [![license](https://img.shields.io/github/license/Toxblh/WinToLinux.svg)](https://github.com/Toxblh/WinToLinux/blob/master/LICENSE) ![travis](https://travis-ci.org/Toxblh/WinToLinux.svg?branch=master)
+# WinToLinux [![GitHub release](https://img.shields.io/github/release/toxblh/WinToLinux.svg)](https://github.com/Toxblh/WinToLinux/releases) [![license](https://img.shields.io/github/license/Toxblh/WinToLinux.svg)](https://github.com/Toxblh/WinToLinux/blob/master/LICENSE) ![actions](https://github.com/Toxblh/WinToLinux/workflows/MSBuild/badge.svg)
 
 <img src="WtL.ico" align="right"
      title="MTMR by Toxblh" width="110" height="110">
