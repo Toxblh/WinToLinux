@@ -2,8 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Drawing;
-using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
@@ -21,48 +19,49 @@ namespace MyTrayApp
 
         }
 
-        private NotifyIcon trayIcon;
-        private ContextMenu trayMenu;
-        RegistryKey registryKey = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true);
-        private string appName = "WinToLinux";
+        private readonly NotifyIcon trayIcon;
+        private readonly ContextMenu trayMenu;
+        readonly RegistryKey registryKey = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true);
+        private readonly string appName = "WinToLinux";
 
         List<string> uefi = new List<string>();
         List<string> uuid = new List<string>();
         string bootsequence;
         string currentValue;
         int shift;
-
-        Regex regexUUID = new Regex("^(\\{){0,1}[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{12}(\\}){0,1}$");
+        readonly Regex regexUUID = new Regex("^(\\{){0,1}[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{12}(\\}){0,1}$");
 
         public SysTrayApp()
         {
             bool isStart = registryKey.GetValue(appName) != null;
-            getMenuItems();
+            GetMenuItems();
 
-            currentValue = bootsequence != null ? bootsequence : uuid.First();
+            currentValue = bootsequence ?? uuid.First();
             shift = uuid.Count() - uefi.Count();
 
             // Create a simple tray menu with only one item.
             trayMenu = new ContextMenu();
             trayMenu.MenuItems.Add("Settings").Enabled = false;
             trayMenu.MenuItems.Add("-");
-            trayMenu.MenuItems.Add("Start with system", onRegisterInStartup).Checked = isStart;
+            trayMenu.MenuItems.Add("Start with system", OnRegisterInStartup).Checked = isStart;
             trayMenu.MenuItems.Add("-");
             trayMenu.MenuItems.Add("Reboot to...").Enabled = false;
             trayMenu.MenuItems.Add("-");
 
             foreach (var pos in uefi.Select((value, i) => new { i, value }))
+            {
+                MenuItem item = new MenuItem
                 {
-                MenuItem item = new MenuItem();
-                item.Checked = uuid[pos.i + shift] == currentValue;
-                item.Tag = uuid[pos.i + shift];
-                item.Text = pos.value;
-                item.Click += onMenuClick;
+                    Checked = uuid[pos.i + shift] == currentValue,
+                    Tag = uuid[pos.i + shift],
+                    Text = pos.value
+                };
+                item.Click += OnMenuClick;
                 trayMenu.MenuItems.Add(item);
             }
 
             trayMenu.MenuItems.Add("-");
-            trayMenu.MenuItems.Add("Reboot system", onReboot);
+            trayMenu.MenuItems.Add("Reboot system", OnReboot);
             trayMenu.MenuItems.Add("-");
             trayMenu.MenuItems.Add("Exit", OnExit);
 
@@ -70,13 +69,15 @@ namespace MyTrayApp
             // standard system icon for simplicity, but you
             // can of course use your own custom icon too.
 
-            trayIcon = new NotifyIcon();
-            trayIcon.Text = "Reboot to Linux";
-            trayIcon.Icon = WinToLinux.Properties.Resources.WtL;
+            trayIcon = new NotifyIcon
+            {
+                Text = "Reboot to Linux",
+                Icon = WinToLinux.Properties.Resources.WtL,
 
-            // Add menu to tray icon and show it.
-            trayIcon.ContextMenu = trayMenu;
-            trayIcon.Visible = true;
+                // Add menu to tray icon and show it.
+                ContextMenu = trayMenu,
+                Visible = true
+            };
         }
 
 
@@ -85,20 +86,20 @@ namespace MyTrayApp
             Application.Exit();
         }
 
-        private void onMenuClick(object sender, EventArgs e)
+        private void OnMenuClick(object sender, EventArgs e)
         {
             string UUID = (sender as MenuItem).Tag.ToString();
             string command = "/C bcdedit.exe /set {fwbootmgr} bootsequence " + UUID + " /addfirst";
             Console.WriteLine(command);
 
-            launchCMD(command);
+            LaunchCMD(command);
 
             uuid = new List<string>();
             uefi = new List<string>();
 
-            launchCMD("/C bcdedit /enum firmware");
-            
-            currentValue = bootsequence != null ? bootsequence : uuid.First();
+            LaunchCMD("/C bcdedit /enum firmware");
+
+            currentValue = bootsequence ?? uuid.First();
             shift = uuid.Count() - uefi.Count();
             foreach (var pos in uefi.Select((value, i) => new { i, value }))
             {
@@ -106,7 +107,7 @@ namespace MyTrayApp
             }
         }
 
-        private void onRegisterInStartup(object sender, EventArgs e)
+        private void OnRegisterInStartup(object sender, EventArgs e)
         {
             bool isStartup = registryKey.GetValue(appName) == null;
 
@@ -122,17 +123,17 @@ namespace MyTrayApp
             }
         }
 
-        private void onReboot(object sender, EventArgs e)
+        private void OnReboot(object sender, EventArgs e)
         {
-            launchCMD("/C shutdown /r /t 0");
+            LaunchCMD("/C shutdown /r /t 0");
         }
 
-        private void getMenuItems()
+        private void GetMenuItems()
         {
-            launchCMD("/C bcdedit /enum firmware");
+            LaunchCMD("/C bcdedit /enum firmware");
         }
 
-        private void launchCMD(string command)
+        private void LaunchCMD(string command)
         {
             Process build = new Process();
             build.StartInfo.Arguments = command;
@@ -142,8 +143,8 @@ namespace MyTrayApp
             build.StartInfo.RedirectStandardOutput = true;
             build.StartInfo.RedirectStandardError = true;
             build.StartInfo.CreateNoWindow = true;
-            build.ErrorDataReceived += build_ErrorAndDataReceived;
-            build.OutputDataReceived += build_ErrorAndDataReceived;
+            build.ErrorDataReceived += Build_ErrorAndDataReceived;
+            build.OutputDataReceived += Build_ErrorAndDataReceived;
             build.EnableRaisingEvents = true;
             build.Start();
             build.BeginOutputReadLine();
@@ -151,7 +152,7 @@ namespace MyTrayApp
             build.WaitForExit();
         }
 
-        void build_ErrorAndDataReceived(object sender, DataReceivedEventArgs e)
+        void Build_ErrorAndDataReceived(object sender, DataReceivedEventArgs e)
         {
             if (e.Data != null && e.Data != "")
             {
@@ -163,7 +164,7 @@ namespace MyTrayApp
                 if (splited[0] == "description")
                 {
                     splited = splited.Where(w => w != splited[0]).ToArray();
-                    Console.WriteLine(String.Join(" ",splited));
+                    Console.WriteLine(String.Join(" ", splited));
                     uefi.Add(String.Join(" ", splited));
                 }
 
