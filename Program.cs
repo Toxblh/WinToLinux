@@ -13,10 +13,7 @@ namespace MyTrayApp
         [STAThread]
         public static void Main()
         {
-
-            Console.WriteLine("HEY Im HERE!!");
             Application.Run(new SysTrayApp());
-
         }
 
         private readonly NotifyIcon trayIcon;
