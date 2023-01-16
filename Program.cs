@@ -1,4 +1,4 @@
-﻿using Microsoft.Win32;
+﻿using Microsoft.Win32.TaskScheduler;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -18,7 +18,6 @@ namespace MyTrayApp
 
         private readonly NotifyIcon trayIcon;
         private readonly ContextMenu trayMenu;
-        readonly RegistryKey registryKey = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true);
         private readonly string appName = "WinToLinux";
 
         List<string> uefi = new List<string>();
@@ -30,7 +29,6 @@ namespace MyTrayApp
 
         public SysTrayApp()
         {
-            bool isStart = registryKey.GetValue(appName) != null;
             GetMenuItems();
 
             currentValue = bootsequence ?? uuid.First();
@@ -40,7 +38,7 @@ namespace MyTrayApp
             trayMenu = new ContextMenu();
             trayMenu.MenuItems.Add("Settings").Enabled = false;
             trayMenu.MenuItems.Add("-");
-            trayMenu.MenuItems.Add("Start with system", OnRegisterInStartup).Checked = isStart;
+            trayMenu.MenuItems.Add("Start with system", OnRegisterInStartup).Checked = isTaskEnable();
             trayMenu.MenuItems.Add("-");
             trayMenu.MenuItems.Add("Reboot to...").Enabled = false;
             trayMenu.MenuItems.Add("-");
@@ -104,19 +102,51 @@ namespace MyTrayApp
             }
         }
 
+        private void CreateTask()
+        {
+            using (TaskService ts = new TaskService())
+            {
+                TaskDefinition td = ts.NewTask();
+
+                td.RegistrationInfo.Description = "WinToLinux. Start on boot";
+                td.Triggers.Add(new LogonTrigger());
+                td.Actions.Add(new ExecAction(Application.ExecutablePath, null, null));
+                td.Principal.RunLevel = TaskRunLevel.Highest;
+
+                ts.RootFolder.RegisterTaskDefinition(appName, td);
+            }
+        }
+
+        private void DeleteTask()
+        {
+            using (TaskService ts = new TaskService())
+            {
+                if (ts.GetTask(appName) != null)
+                {
+                    ts.RootFolder.DeleteTask(appName);
+                }
+            }
+        }
+
+        private bool isTaskEnable()
+        {
+            using (TaskService ts = new TaskService())
+            {
+                return (ts.GetTask(appName) != null);
+            }
+        }
+
         private void OnRegisterInStartup(object sender, EventArgs e)
         {
-            bool isStartup = registryKey.GetValue(appName) == null;
-
-            if (isStartup)
+            if (isTaskEnable())
             {
-                registryKey.SetValue(appName, Application.ExecutablePath);
-                trayMenu.MenuItems[2].Checked = true;
+                DeleteTask();
+                trayMenu.MenuItems[2].Checked = false;
             }
             else
             {
-                registryKey.DeleteValue(appName);
-                trayMenu.MenuItems[2].Checked = false;
+                CreateTask();
+                trayMenu.MenuItems[2].Checked = true;
             }
         }
 
