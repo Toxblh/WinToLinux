@@ -8,9 +8,9 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("WinToLinux")]
 [assembly: AssemblyDescription("Reboot to Linux easier than ever")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
+[assembly: AssemblyCompany("Toxblh")]
 [assembly: AssemblyProduct("WinToLinux")]
-[assembly: AssemblyCopyright("Anton Palgunov. Copyright ©  2020")]
+[assembly: AssemblyCopyright("Anton Palgunov. Copyright ©  2020 - 2023")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
