@@ -13,4 +13,4 @@ jobs:
       uses: microsoft/setup-msbuild@v1.1
 
     - name: Build app for release
-      run: msbuild WinToLinux.csproj-verbosity:diag -property:Configuration=Release
+      run: msbuild WinToLinux.csproj -verbosity:diag -property:Configuration=Release
