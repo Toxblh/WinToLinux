@@ -8,9 +8,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@master
+      
+    - name: Add msbuild to PATH
+      uses: microsoft/setup-msbuild@v1.1
 
-    - name: Setup MSBuild.exe
-      uses: warrenbuckley/Setup-MSBuild@v1
-
-    - name: MSBuild
-      run: msbuild WinToLinux.sln /property:Configuration=Release
+    - name: Build app for release
+      run: msbuild WinToLinux.csproj-verbosity:diag -property:Configuration=Release
