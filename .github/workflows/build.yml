@@ -11,6 +11,12 @@ jobs:
       
     - name: Add msbuild to PATH
       uses: microsoft/setup-msbuild@v1.1
+      
+    - name: Setup NuGet
+      uses: NuGet/setup-nuget@v1.1.1
+
+    - name: Restore NuGet packages
+      run: nuget restore
 
     - name: Build app for release
-      run: msbuild WinToLinux.csproj -verbosity:diag -property:Configuration=Release
+      run: msbuild WinToLinux.sln -p:Configuration=Release
