@@ -4,7 +4,7 @@
 
 _Reboot to Linux easier than ever_
 
-Be in Linux in two clicks!  
+Be in Linux in two clicks!
 Fast way to edit UEFI order for the next start of the system
 
 ![image](https://user-images.githubusercontent.com/2198153/72212645-8dcf2f80-34d7-11ea-9d9d-cee13f23be36.png)
