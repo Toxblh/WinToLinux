@@ -4,11 +4,11 @@
 
 _Reboot to Linux easier than ever_
 
-Be in Linux in two clicks! 
+Be in Linux in two clicks!
 Fast way to edit UEFI order for the next start of the system
 
 ![image](https://user-images.githubusercontent.com/2198153/72212645-8dcf2f80-34d7-11ea-9d9d-cee13f23be36.png)
 
 ### Download/Installation
-  * <a href="https://github.com/Toxblh/WinToLinux/releases/download/v1.0/WinToLinux.exe" target="_blank"><img src="https://user-images.githubusercontent.com/2198153/93204591-42e47680-f74e-11ea-84d3-671df39b371b.png" height="22px" alt="Store Link" /></a> 
-  * Download from [GitHub Release](https://github.com/Toxblh/WinToLinux/releases)
+  * <a href="https://github.com/Toxblh/WinToLinux/releases/download/v1.1.0/WinToLinux.zip" target="_blank"><img src="https://user-images.githubusercontent.com/2198153/93204591-42e47680-f74e-11ea-84d3-671df39b371b.png" height="22px" alt="Store Link" /></a> 
+  * Download from [GitHub Releases](https://github.com/Toxblh/WinToLinux/releases/latest)
