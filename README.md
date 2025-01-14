@@ -12,3 +12,7 @@ Fast way to edit UEFI order for the next start of the system
 ### Download/Installation
   * <a href="https://github.com/Toxblh/WinToLinux/releases/download/v1.1.0/WinToLinux.zip" target="_blank"><img src="https://user-images.githubusercontent.com/2198153/93204591-42e47680-f74e-11ea-84d3-671df39b371b.png" height="22px" alt="Store Link" /></a> 
   * Download from [GitHub Releases](https://github.com/Toxblh/WinToLinux/releases/latest)
+  * Or use WinGet:
+  ```shell
+  winget install -e --id toxblh.WinToLinux
+  ```
