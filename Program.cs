@@ -116,7 +116,7 @@ namespace MyTrayApp
                 td.Settings.StopIfGoingOnBatteries = false;
                 td.Settings.DisallowStartIfOnBatteries = false;
 
-                td.Settings.UseUnifiedSchedulingEngine = true;  # why not?
+                td.Settings.UseUnifiedSchedulingEngine = true;  // why not?
 
                 ts.RootFolder.RegisterTaskDefinition(appName, td);
             }
