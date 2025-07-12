@@ -13,6 +13,7 @@ namespace MyTrayApp
         [STAThread]
         public static void Main()
         {
+            Application.SetHighDpiMode(HighDpiMode.SystemAware);
             Application.Run(new SysTrayApp());
         }
 
@@ -21,11 +22,11 @@ namespace MyTrayApp
         private readonly ContextMenuStrip trayMenu;
         private readonly string appName = "WinToLinux";
 
-        List<string> uefi = new List<string>();
-        List<string> uuid = new List<string>();
-        string bootSequence;
-        string currentValue;
-        int shift;
+        private List<string> uefi = new List<string>();
+        private List<string> uuid = new List<string>();
+        private string bootSequence;
+        private string currentValue;
+        private int shift;
         readonly Regex regexUUID = new Regex("^(\\{){0,1}[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{12}(\\}){0,1}$");
 
         public SysTrayApp()
