@@ -96,10 +96,14 @@ namespace MyTrayApp
                 return;
 
             // Set the boot sequence
-            string command = $"/C bcdedit.exe /set {{fwbootmgr}} bootsequence {uuid} /addfirst";
-            Console.WriteLine(command);
-
-            LaunchCMD(command);
+            string args = $"/Set {{fwbootmgr}} BootSequence {uuid} /AddFirst";
+            var psi = new ProcessStartInfo {
+                FileName = "bcdedit",
+                Arguments = args,
+                CreateNoWindow = true
+            };
+            Process.Start(psi);
+            Console.WriteLine("bcdedit" + args);
 
             // Update the radio button selection
             SetRadioButtonSelection(uuid);
@@ -136,7 +140,7 @@ namespace MyTrayApp
             uuid.Clear();
             uefi.Clear();
 
-            LaunchCMD("/C bcdedit /enum firmware");
+            GetMenuItems();
 
             currentValue = bootSequence ?? (uuid.Count > 0 ? uuid.First() : string.Empty);
             shift = uuid.Count - uefi.Count;
@@ -203,42 +207,28 @@ namespace MyTrayApp
 
         private void OnReboot(object sender, EventArgs e)
         {
-            LaunchCMD("/C shutdown /r /t 0");
+            var psi = new ProcessStartInfo("shutdown", "/s /t 0");
+            psi.CreateNoWindow = true;
+            Process.Start(psi);
         }
 
         private void GetMenuItems()
         {
-            LaunchCMD("/C bcdedit /enum firmware");
+            var psi = new ProcessStartInfo {
+                FileName = "bcdedit",
+                Arguments = "/enum firmware",
+                RedirectStandardOutput = true,
+                CreateNoWindow = true,
+                UseShellExecute = false
+            };
+            using var process = new Process { StartInfo = psi };
+            process.OutputDataReceived += ParseBCDEditOutput;
+            process.Start();
+            process.BeginOutputReadLine();
+            process.WaitForExit();
         }
 
-        private void LaunchCMD(string command)
-        {
-            try
-            {
-                using var process = new Process();
-                process.StartInfo.Arguments = command;
-                process.StartInfo.FileName = "cmd.exe";
-                process.StartInfo.UseShellExecute = false;
-                process.StartInfo.RedirectStandardOutput = true;
-                process.StartInfo.RedirectStandardError = true;
-                process.StartInfo.CreateNoWindow = true;
-                
-                process.ErrorDataReceived += Build_ErrorAndDataReceived;
-                process.OutputDataReceived += Build_ErrorAndDataReceived;
-                process.EnableRaisingEvents = true;
-                
-                process.Start();
-                process.BeginOutputReadLine();
-                process.BeginErrorReadLine();
-                process.WaitForExit();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error executing command: {ex.Message}");
-            }
-        }
-
-        void Build_ErrorAndDataReceived(object sender, DataReceivedEventArgs e)
+        void ParseBCDEditOutput(object sender, DataReceivedEventArgs e)
         {
             if (string.IsNullOrEmpty(e.Data))
                 return;
