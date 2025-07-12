@@ -13,12 +13,12 @@ namespace MyTrayApp
         [STAThread]
         public static void Main()
         {
+            Application.EnableVisualStyles();
             Application.SetHighDpiMode(HighDpiMode.SystemAware);
             Application.Run(new SysTrayApp());
         }
 
         private readonly NotifyIcon trayIcon;
-        // TODO ContextMenu is no longer supported. Use ContextMenuStrip instead. For more details see https://docs.microsoft.com/en-us/dotnet/core/compatibility/winforms#removed-controls
         private readonly ContextMenuStrip trayMenu;
         private readonly string appName = "WinToLinux";
 
@@ -27,7 +27,7 @@ namespace MyTrayApp
         private string bootSequence;
         private string currentValue;
         private int shift;
-        readonly Regex regexUUID = new Regex("^(\\{){0,1}[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{12}(\\}){0,1}$");
+        private readonly Regex regexUUID = new Regex("^(\\{){0,1}[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{12}(\\}){0,1}$");
 
         public SysTrayApp()
         {
@@ -73,7 +73,6 @@ namespace MyTrayApp
             // standard system icon for simplicity, but you
             // can of course use your own custom icon too.
 
-            // TODO ContextMenu is no longer supported. Use ContextMenuStrip instead. For more details see https://docs.microsoft.com/en-us/dotnet/core/compatibility/winforms#removed-controls
             trayIcon = new NotifyIcon
             {
                 Text = "Reboot to Linux",
