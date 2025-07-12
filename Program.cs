@@ -113,6 +113,11 @@ namespace MyTrayApp
                 td.Actions.Add(new ExecAction(Application.ExecutablePath, null, null));
                 td.Principal.RunLevel = TaskRunLevel.Highest;
 
+                td.Settings.StopIfGoingOnBatteries = false;
+                td.Settings.DisallowStartIfOnBatteries = false;
+
+                td.Settings.UseUnifiedSchedulingEngine = true;  // why not?
+
                 ts.RootFolder.RegisterTaskDefinition(appName, td);
             }
         }
