@@ -19,13 +19,15 @@
     <BootstrapperEnabled>true</BootstrapperEnabled>
     <UseWindowsForms>true</UseWindowsForms>
     <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
-    <SupportedOSPlatformVersion>7.0</SupportedOSPlatformVersion>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <ApplicationIcon>WtL.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-	<ApplicationHighDpiMode>SystemAware</ApplicationHighDpiMode>
-	<FileVersion>1.1.0</FileVersion>
-	<PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <ApplicationHighDpiMode>SystemAware</ApplicationHighDpiMode>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <FileVersion>1.2.0</FileVersion>
+    <RepositoryUrl>https://github.com/Toxblh/WinToLinux</RepositoryUrl>
+    <Copyright>Anton Palgunov &amp; Contributors. Copyright © 2020 - 2025</Copyright>
+    <Description>Reboot to Linux easier than ever!</Description>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
