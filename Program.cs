@@ -8,7 +8,7 @@ using System.Windows.Forms;
 
 namespace MyTrayApp
 {
-    public class SysTrayApp : Form
+    public partial class SysTrayApp : Form
     {
         [STAThread]
         public static void Main()
@@ -20,53 +20,41 @@ namespace MyTrayApp
 
         private readonly NotifyIcon trayIcon;
         private readonly ContextMenuStrip trayMenu;
-        private readonly string appName = "WinToLinux";
+        private const string appName = "WinToLinux";
 
-        private List<string> uefi = new List<string>();
-        private List<string> uuid = new List<string>();
+        private readonly List<string> uefi = [];
+        private readonly List<string> uuid = [];
+        private readonly List<ToolStripMenuItem> bootOptions = [];
         private string bootSequence;
         private string currentValue;
         private int shift;
-        private readonly Regex regexUUID = new Regex("^(\\{){0,1}[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{12}(\\}){0,1}$");
+
+        private readonly ToolStripMenuItem startButton = new("Start with system");
+
+        [GeneratedRegex("^(\\{){0,1}[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{12}(\\}){0,1}$")]
+        private static partial Regex UUIDRegEx();
 
         public SysTrayApp()
         {
-            GetMenuItems();
-
-            currentValue = bootSequence ?? uuid.First();
-            shift = uuid.Count() - uefi.Count();
-
             // Create a simple tray menu with only one item.
             trayMenu = new ContextMenuStrip();
             trayMenu.Items.Add("Settings").Enabled = false;
-            trayMenu.Items.Add("-");
+            trayMenu.Items.Add(new ToolStripSeparator());
 
-            var startButton = new ToolStripMenuItem("Start with system");
             startButton.Checked = IsTaskEnabled();
             startButton.Click += OnRegisterInStartup;
             trayMenu.Items.Add(startButton);
 
-            trayMenu.Items.Add("-");
+            trayMenu.Items.Add(new ToolStripSeparator());
             trayMenu.Items.Add("Reboot to...").Enabled = false;
-            trayMenu.Items.Add("-");
+            trayMenu.Items.Add(new ToolStripSeparator());
 
-            foreach (var pos in uefi.Select((value, i) => new { i, value }))
-            {
-                var item = new ToolStripMenuItem {
-                    CheckOnClick = true,
-                    Tag = pos.i + shift < uuid.Count ? uuid[pos.i + shift] : string.Empty,
-                    Text = pos.value
-                };
-                item.Click += OnMenuClick;
-                trayMenu.Items.Add(item);
-            }
+            RefreshMenuItems();
+            bootOptions.ForEach(item => trayMenu.Items.Add(item));
 
-            // Set the initial radio button selection
-            SetRadioButtonSelection(currentValue);
-
-            trayMenu.Items.Add("-");
+            trayMenu.Items.Add(new ToolStripSeparator());
             trayMenu.Items.Add("Reboot system", null, OnReboot);
-            trayMenu.Items.Add("-");
+            trayMenu.Items.Add(new ToolStripSeparator());
             trayMenu.Items.Add("Exit", null, OnExit);
 
             // Create a tray icon. In this example we use a
@@ -111,27 +99,14 @@ namespace MyTrayApp
             // Update the current value
             currentValue = uuid;
         }
-        private void SetRadioButtonSelection(string selectedUuid)
+        private void SetRadioButtonSelection(string selectedUUID)
         {
             // First, uncheck all boot option menu items
-            for (int i = 6; i < trayMenu.Items.Count - 3; i++) // Skip fixed items at start and end
+            foreach (var item in bootOptions)
             {
-                if (trayMenu.Items[i] is ToolStripMenuItem item && item.Tag is string)
+                if (item.Tag is string itemUUID)
                 {
-                    item.Checked = false;
-                }
-            }
-
-            // Then check the selected item
-            for (int i = 6; i < trayMenu.Items.Count - 3; i++)
-            {
-                if (trayMenu.Items[i] is ToolStripMenuItem item &&
-                    item.Tag is string itemUUID &&
-                    itemUUID == selectedUuid
-                    )
-                {
-                    item.Checked = true;
-                    break;
+                    item.Checked = (itemUUID == selectedUUID);
                 }
             }
         }
@@ -142,13 +117,25 @@ namespace MyTrayApp
 
             GetMenuItems();
 
-            currentValue = bootSequence ?? (uuid.Count > 0 ? uuid.First() : string.Empty);
+            currentValue = bootSequence ?? uuid.FirstOrDefault(string.Empty);
             shift = uuid.Count - uefi.Count;
+
+            foreach (var (value, i) in uefi.Select((value, i) => (value, i)))
+            {
+                var item = new ToolStripMenuItem
+                {
+                    CheckOnClick = true,
+                    Tag = i + shift < uuid.Count ? uuid[i + shift] : string.Empty,
+                    Text = value
+                };
+                item.Click += OnMenuClick;
+                bootOptions.Add(item);
+            }
 
             // Update radio button selection
             SetRadioButtonSelection(currentValue);
         }
-        private void CreateTask()
+        private static void CreateTask()
         {
             try
             {
@@ -174,7 +161,7 @@ namespace MyTrayApp
             }
         }
 
-        private void DeleteTask()
+        private static void DeleteTask()
         {
             using var ts = new TaskService();
             if (ts.GetTask(appName) != null)
@@ -183,25 +170,23 @@ namespace MyTrayApp
             }
         }
 
-        private bool IsTaskEnabled()
+        private static bool IsTaskEnabled()
         {
             using var ts = new TaskService();
             return ts.GetTask(appName) != null;
         }
 
-        private void OnRegisterInStartup(object sender, EventArgs e)
+        private void OnRegisterInStartup(object _, EventArgs e)
         {
             if (IsTaskEnabled())
             {
                 DeleteTask();
-                if (trayMenu.Items[2] is ToolStripMenuItem item)
-                    item.Checked = false;
+                startButton.Checked = false;
             }
             else
             {
                 CreateTask();
-                if (trayMenu.Items[2] is ToolStripMenuItem item)
-                    item.Checked = true;
+                startButton.Checked = true;
             }
         }
 
@@ -239,7 +224,7 @@ namespace MyTrayApp
             if (splitMsg.Length == 0)
                 return;
 
-            var match = regexUUID.Match(splitMsg.Last());
+            var match = UUIDRegEx().Match(splitMsg.Last());
 
             if (splitMsg[0] == "description")
             {
