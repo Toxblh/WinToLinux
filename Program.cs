@@ -30,6 +30,7 @@ namespace MyTrayApp
         private int shift;
 
         private readonly ToolStripMenuItem startButton = new("Start with system");
+        private readonly ToolStripMenuItem rebootToButton = new("Reboot now to...");
 
         [GeneratedRegex("^(\\{){0,1}[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{12}(\\}){0,1}$")]
         private static partial Regex UUIDRegEx();
@@ -45,11 +46,12 @@ namespace MyTrayApp
             startButton.Click += OnRegisterInStartup;
             trayMenu.Items.Add(startButton);
 
+            RefreshMenuItems();
+
             trayMenu.Items.Add(new ToolStripSeparator());
-            trayMenu.Items.Add("Reboot to...").Enabled = false;
+            trayMenu.Items.Add(rebootToButton);
             trayMenu.Items.Add(new ToolStripSeparator());
 
-            RefreshMenuItems();
             bootOptions.ForEach(item => trayMenu.Items.Add(item));
 
             trayMenu.Items.Add(new ToolStripSeparator());
@@ -57,9 +59,7 @@ namespace MyTrayApp
             trayMenu.Items.Add(new ToolStripSeparator());
             trayMenu.Items.Add("Exit", null, OnExit);
 
-            // Create a tray icon. In this example we use a
-            // standard system icon for simplicity, but you
-            // can of course use your own custom icon too.
+            // Create a tray icon.
 
             trayIcon = new NotifyIcon
             {
@@ -78,7 +78,7 @@ namespace MyTrayApp
             Application.Exit();
         }
 
-        private void OnMenuClick(object sender, EventArgs e)
+        private void SetNextBoot(object sender, EventArgs _)
         {
             if (sender is not ToolStripMenuItem clickedItem || clickedItem.Tag is not string uuid)
                 return;
@@ -114,6 +114,7 @@ namespace MyTrayApp
         {
             uuid.Clear();
             uefi.Clear();
+            rebootToButton.DropDownItems.Clear();
 
             GetMenuItems();
 
@@ -122,14 +123,30 @@ namespace MyTrayApp
 
             foreach (var (value, i) in uefi.Select((value, i) => (value, i)))
             {
-                var item = new ToolStripMenuItem
+                string itemTag = i + shift < uuid.Count ? uuid[i + shift] : string.Empty;
+
+                var bootItem = new ToolStripMenuItem
                 {
                     CheckOnClick = true,
-                    Tag = i + shift < uuid.Count ? uuid[i + shift] : string.Empty,
+                    Tag = itemTag,
                     Text = value
                 };
-                item.Click += OnMenuClick;
-                bootOptions.Add(item);
+                bootItem.Click += SetNextBoot;
+
+                bootOptions.Add(bootItem);
+
+                var immediateItem = new ToolStripMenuItem
+                {
+                    Tag = itemTag,
+                    Text = value
+                };
+                immediateItem.Click += (sender, _) =>
+                {
+                    SetNextBoot(sender, _);
+                    OnReboot(sender, _);
+                };
+
+                rebootToButton.DropDownItems.Add(immediateItem);
             }
 
             // Update radio button selection
