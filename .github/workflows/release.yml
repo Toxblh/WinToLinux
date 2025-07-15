@@ -11,31 +11,46 @@ jobs:
     name: Upload Release Asset
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v4
 
-      - name: Setup MSBuild.exe
-        uses: warrenbuckley/Setup-MSBuild@v1
-
-      - name: MSBuild
-        run: msbuild WinToLinux.sln /property:Configuration=Release
-
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1.0.0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
         with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
-          draft: false
-          prerelease: false
+          dotnet-version: '8.x'
+
+      - name: Build solution
+        run: dotnet build
+
+      - name: Publish app
+        run: |
+          dotnet publish WinToLinux.slnx -p:PublishSingleFile=true -c Release --sc false --arch x64
+          dotnet publish WinToLinux.slnx -p:PublishSingleFile=true -c Release --sc false --arch x86
+          dotnet publish WinToLinux.slnx -p:PublishSingleFile=true -c Release --sc false --arch arm64
+
+      - name: Zip published output
+        run: |
+          Compress-Archive -Path ./bin/Release/*/win-x64/publish -DestinationPath WinToLinux_x64.zip
+          Compress-Archive -Path ./bin/Release/*/win-x86/publish -DestinationPath WinToLinux_x86.zip
+          Compress-Archive -Path ./bin/Release/*/win-arm64/publish -DestinationPath WinToLinux_arm64.zip
+
+      - name: Rename .exe output
+        run: |
+          New-Item -ItemType Directory -Force -Path artifacts
+          Move-Item -Path ./bin/Release/*/win-x64/publish/WinToLinux.exe -Destination ./artifacts/WinToLinux-x64.exe
+          Move-Item -Path ./bin/Release/*/win-x86/publish/WinToLinux.exe -Destination ./artifacts/WinToLinux-x86.exe
+          Move-Item -Path ./bin/Release/*/win-arm64/publish/WinToLinux.exe -Destination ./artifacts/WinToLinux-arm64.exe
+        shell: pwsh
+
       - name: Upload Release Asset
-        id: upload-release-asset
-        uses: actions/upload-release-asset@v1.0.1
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            ./artifacts/WinToLinux-x64.exe
+            ./artifacts/WinToLinux-x86.exe
+            ./artifacts/WinToLinux-arm64.exe
+            WinToLinux_x64.zip
+            WinToLinux_x86.zip
+            WinToLinux_arm64.zip
+          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
-          asset_path: ./bin/Release/WinToLinux.exe
-          asset_name: WinToLinux.exe
-          asset_content_type: application/octet-stream
