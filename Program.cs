@@ -1,10 +1,10 @@
-﻿using Microsoft.Win32.TaskScheduler;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
+using Microsoft.Win32.TaskScheduler;
 
 namespace MyTrayApp
 {
@@ -28,6 +28,7 @@ namespace MyTrayApp
         private string bootSequence;
         private string currentValue;
         private int shift;
+        private readonly int bootOptionsTrayStartIndex;
 
         private readonly ToolStripMenuItem startButton = new("Start with system");
         private readonly ToolStripMenuItem rebootToButton = new("Reboot now to...");
@@ -46,13 +47,12 @@ namespace MyTrayApp
             startButton.Click += OnRegisterInStartup;
             trayMenu.Items.Add(startButton);
 
-            RefreshMenuItems();
-
             trayMenu.Items.Add(new ToolStripSeparator());
             trayMenu.Items.Add(rebootToButton);
             trayMenu.Items.Add(new ToolStripSeparator());
 
-            bootOptions.ForEach(item => trayMenu.Items.Add(item));
+            bootOptionsTrayStartIndex = trayMenu.Items.Count;
+            RefreshMenuItems();
 
             trayMenu.Items.Add(new ToolStripSeparator());
             trayMenu.Items.Add("Reboot system", null, OnReboot);
@@ -70,6 +70,10 @@ namespace MyTrayApp
                 ContextMenuStrip = trayMenu,
                 Visible = true
             };
+            trayIcon.ContextMenuStrip.Opening += (_, _) =>
+            {
+                RefreshMenuItems();
+            };
         }
 
 
@@ -85,7 +89,8 @@ namespace MyTrayApp
 
             // Set the boot sequence
             string args = $"/Set {{fwbootmgr}} BootSequence {uuid} /AddFirst";
-            var psi = new ProcessStartInfo {
+            var psi = new ProcessStartInfo
+            {
                 FileName = "bcdedit",
                 Arguments = args,
                 CreateNoWindow = true
@@ -114,7 +119,12 @@ namespace MyTrayApp
         {
             uuid.Clear();
             uefi.Clear();
-            rebootToButton.DropDownItems.Clear();
+            if (bootOptions.Count > 0)
+            {
+                bootOptions.ForEach(item => trayMenu.Items.Remove(item));
+                bootOptions.Clear();
+                rebootToButton.DropDownItems.Clear();
+            }
 
             GetMenuItems();
 
@@ -151,6 +161,10 @@ namespace MyTrayApp
 
             // Update radio button selection
             SetRadioButtonSelection(currentValue);
+            for (int i = 0; i < bootOptions.Count; i++)
+            {
+                trayMenu.Items.Insert(bootOptionsTrayStartIndex + i, bootOptions[i]);
+            }
         }
         private static void CreateTask()
         {
@@ -216,7 +230,8 @@ namespace MyTrayApp
 
         private void GetMenuItems()
         {
-            var psi = new ProcessStartInfo {
+            var psi = new ProcessStartInfo
+            {
                 FileName = "bcdedit",
                 Arguments = "/enum firmware",
                 RedirectStandardOutput = true,
