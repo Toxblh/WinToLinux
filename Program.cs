@@ -172,9 +172,10 @@ namespace MyTrayApp
             {
                 using var ts = new TaskService();
                 var td = ts.NewTask();
+                string currentUser = $"{Environment.UserDomainName}\\{Environment.UserName}";
 
                 td.RegistrationInfo.Description = "WinToLinux. Start on boot";
-                td.Triggers.Add(new LogonTrigger());
+                td.Triggers.Add(new LogonTrigger() { UserId = currentUser });
                 td.Actions.Add(new ExecAction(Application.ExecutablePath, null, null));
                 td.Principal.RunLevel = TaskRunLevel.Highest;
 
