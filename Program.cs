@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using Microsoft.Win32.TaskScheduler;
@@ -298,6 +300,25 @@ namespace MyTrayApp
             }
 
             base.Dispose(isDisposing);
+        }
+    }
+    public class ContextMenuStrip : System.Windows.Forms.ContextMenuStrip
+    {
+        private new void RescaleConstantsForDpi(int deviceDpiOld, int deviceDpiNew)
+        {
+            // Use reflection to invoke the internal ResetScaling method
+            var resetScalingMethod = typeof(System.Windows.Forms.ContextMenuStrip).GetMethod("ResetScaling", BindingFlags.NonPublic | BindingFlags.Instance);
+            resetScalingMethod?.Invoke(this, [deviceDpiNew]);
+        }
+
+        public ContextMenuStrip(IContainer container) : base(container)
+        {
+            RescaleConstantsForDpi(96, DeviceDpi);
+        }
+
+        public ContextMenuStrip()
+        {
+            RescaleConstantsForDpi(96, DeviceDpi);
         }
     }
 }
