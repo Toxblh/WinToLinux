@@ -290,16 +290,16 @@ namespace MyTrayApp
             base.OnLoad(e);
         }
 
-        protected override void Dispose(bool isDisposing)
+        protected override void Dispose(bool disposing)
         {
-            if (isDisposing)
+            if (disposing)
             {
                 // Release the icon resource.
                 trayIcon.Dispose();
                 trayMenu?.Dispose();
             }
 
-            base.Dispose(isDisposing);
+            base.Dispose(disposing);
         }
     }
     public class ContextMenuStrip : System.Windows.Forms.ContextMenuStrip
