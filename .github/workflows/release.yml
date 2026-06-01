@@ -1,22 +1,25 @@
+name: Publish Release
 on:
   push:
     # Sequence of patterns matched against refs/tags
     tags:
     - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
 
-name: Publish Release
-
 jobs:
   build:
     name: Upload Release Asset
+
+    permissions:
+      contents: write
+
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Setup .NET SDK
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         with:
-          dotnet-version: '8.x'
+          dotnet-version: '10.x'
 
       - name: Build solution
         run: dotnet build
@@ -29,20 +32,20 @@ jobs:
 
       - name: Zip published output
         run: |
-          Compress-Archive -Path ./bin/Release/*/win-x64/publish -DestinationPath WinToLinux_x64.zip
-          Compress-Archive -Path ./bin/Release/*/win-x86/publish -DestinationPath WinToLinux_x86.zip
-          Compress-Archive -Path ./bin/Release/*/win-arm64/publish -DestinationPath WinToLinux_arm64.zip
+          Compress-Archive -Path ./bin/Release/net10.0-windows/win-x64/publish -DestinationPath WinToLinux_x64.zip
+          Compress-Archive -Path ./bin/Release/net10.0-windows/win-x86/publish -DestinationPath WinToLinux_x86.zip
+          Compress-Archive -Path ./bin/Release/net10.0-windows/win-arm64/publish -DestinationPath WinToLinux_arm64.zip
 
       - name: Rename .exe output
         run: |
           New-Item -ItemType Directory -Force -Path artifacts
-          Move-Item -Path ./bin/Release/*/win-x64/publish/WinToLinux.exe -Destination ./artifacts/WinToLinux-x64.exe
-          Move-Item -Path ./bin/Release/*/win-x86/publish/WinToLinux.exe -Destination ./artifacts/WinToLinux-x86.exe
-          Move-Item -Path ./bin/Release/*/win-arm64/publish/WinToLinux.exe -Destination ./artifacts/WinToLinux-arm64.exe
+          Move-Item -Path ./bin/Release/net10.0-windows/win-x64/publish/WinToLinux.exe -Destination ./artifacts/WinToLinux-x64.exe
+          Move-Item -Path ./bin/Release/net10.0-windows/win-x86/publish/WinToLinux.exe -Destination ./artifacts/WinToLinux-x86.exe
+          Move-Item -Path ./bin/Release/net10.0-windows/win-arm64/publish/WinToLinux.exe -Destination ./artifacts/WinToLinux-arm64.exe
         shell: pwsh
 
       - name: Upload Release Asset
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: |
             ./artifacts/WinToLinux-x64.exe
